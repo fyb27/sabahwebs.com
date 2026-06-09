@@ -33,6 +33,9 @@
 .sw-btn.is-wa{ background:#25d366; color:#0a3d20; }
 .sw-btn.is-wa:hover{ box-shadow:0 8px 20px -8px rgba(37,211,102,.5); }
 
+/* Decorative fixed blob layer (position:fixed; inset:0) must not capture clicks,
+   or it covers the generated <main> content and breaks links + the FAQ accordion. */
+.page_background{ pointer-events:none; }
 .sw-grid{ display:grid; gap:1.4rem; }
 .sw-grid.cols-2{ grid-template-columns:repeat(2,1fr); }
 .sw-grid.cols-3{ grid-template-columns:repeat(3,1fr); }
