@@ -1,70 +1,60 @@
 # HANDOFF — sabahwebs.com (Webflow clone + SEO, hosted on GitHub Pages)
 
-**Last updated:** 2026-06-09 (mid-afternoon, GMT+8)
+**Last updated:** 2026-06-09 (late afternoon, GMT+8)
 **Subject site:** sabahwebs.com — web design + SEO agency, Sabah Malaysia (+ Australia secondary)
 **Owners:** Bing & Liang (two partners) · WhatsApp/phone **+60 16-843 0891** · happycodesmy@gmail.com
 **Repo:** https://github.com/fyb27/sabahwebs.com (public, branch `main`)
 **Live (GitHub clone):** https://fyb27.github.io/sabahwebs.com/  ← serves directly, no redirect
 **Real site (unchanged):** https://sabahwebs.com is still on **Webflow** (Cloudflare DNS). Never touched.
 **Local working copy:** `Z:\sites\sabahwebs happycodes\sabahwebs`
-**Latest commit on main:** `a33f7f3` (Homepage/blog/nav refinements)
+**Latest commit on main:** `d510142` (FAQ fix, bg z-index, Website maintenance, /services trim, 3-col blog)
 
 ---
 
-## ⚠️ READ THIS FIRST — open issues + requested work (NOT yet done)
+## ✅ STATUS — the "boil the ocean" batch is DONE and deployed (commit `d510142`)
 
-The owner gave a "boil the ocean" batch near the end of the session and then asked for this
-handoff before it was executed. **None of the items in this section are done yet.** They are
-the next session's job. Priority order is roughly top-to-bottom.
+All items from the owner's final batch are complete and live on GitHub Pages (verified on the
+deployed site). What shipped:
 
-### A. Confirmed bugs still live
-1. **FAQ "+" accordion does not toggle.** Reported on the `/services` page (and any page using the
-   `.sw-faq` `<details>/<summary>` blocks). Earlier we added `.page_background{pointer-events:none}`
-   which fixed *clicks being swallowed* — but the owner says the FAQ still won't open. Native
-   `<details>` needs no JS, so suspect: (a) `webflow.js` / another script calling `preventDefault`
-   on summary clicks, or (b) a remaining element still overlapping the summary. **Test in a real
-   browser** (no Playwright/Puppeteer installed locally — `seo-visual` agent or manual). Don't
-   assume CSS-only reasoning again; verify the actual click.
-2. **`.page_background` visually overlaps text.** It's `position:fixed; inset:0` with blurred blob
-   images (`.hero_blob-*`, `z-index:0/2`). `pointer-events:none` made it click-through, but the
-   blobs still **paint on top of** some headings/words (the generated `<main>` content has no
-   stacking context above it). Fix properly: give the page content a stacking context above the
-   blobs (e.g. wrap/raise `<main>` with `position:relative; z-index:1`) or push `.page_background`
-   behind with a negative z-index. Affects homepage, `/services`, and the `/blog` cards/words.
-3. **"Resources" → "Blog" rename may not be everywhere.** Deployed built files verified 0 nav
-   "Resources" left, but the owner still saw it somewhere — re-check **all** surfaces: nav on every
-   page type, the homepage section `<h2>`, `chrome.json` (generated pages snapshot still says
-   "Resources"), and any `#resources` anchors. Could also have been CDN cache — confirm with a hard
-   refresh / cache-bust.
+### A. Bugs fixed
+1. **FAQ "+" accordion now opens.** The homepage FAQ used Webflow IX2 (`data-w-id`), which does
+   not survive the static mirror. Replaced with a self-contained toggle: `data-w-id` stripped
+   from the 5 `.faq_contents-wrapper`, a tiny inline `sw-faq-toggle` script before `</body>`
+   toggles `.sw-open`, and `custom.css` reveals the answer + flips "+" to "–". (Synced into
+   `seo-fix.mjs`: `FAQ_TOGGLE_JS` + the data-w-id strip under `if (isHome)`.)
+2. **`.page_background` no longer paints over text.** `custom.css` raises every real
+   `.main-wrapper` child (navbar, sections, generated `<main>`, footer) to `z-index:1` above the
+   `z-index:0` blob layer. Sections were already `position:relative`, so this only sets stacking
+   order — no layout shift. Fixes home, /services and /blog overlap.
+3. **"Resources" → "Blog" confirmed everywhere** (nav, footer, homepage "Explore Our Blog").
+   The hidden dead "More resources" CMS block was also removed from all 10 blog posts.
 
-### B. `/services` page redesign (owner request)
-4. **Remove the small blue eyebrow label** (`.sw-eyebrow`, e.g. "Our Services", "What we do",
-   "Why SabahWebs", "Pricing", "FAQ") from **every** section on the page. Owner dislikes it. Remove
-   completely (in `build-services-hub.mjs` `MAIN` + the deployed `services.html`).
-5. **Remove the "Common questions" FAQ section** from `/services` entirely.
-6. **Reduce to just service cards:** Web design, SEO optimisation, **Website maintenance** (new).
-   The page should essentially be the hero + the cards (+ keep the bottom CTA). Drop the "Why
-   SabahWebs" + "How we price" blocks unless the owner wants them — confirm.
+### B/C. /services redesign + Website maintenance
+4-8. `/services` is now **hero + 3 cards + bottom CTA only**. Removed ALL `.sw-eyebrow` labels,
+   the "Common questions" FAQ, and the "Why SabahWebs" + "How we price" sections. Cards = Web
+   design, SEO services, **Website maintenance**. Schema updated (FAQPage dropped, ItemList = 3).
+   Homepage "Our Services in Sabah" gained a 3rd card, **Website Maintenance** (basil_edit icon).
+   No dedicated `/website-maintenance-sabah` page yet — the card links to `/contact`. If the owner
+   wants a real page, build it like the other services (add to `build-pages.mjs` + every page-list
+   array in §4 + sitemap + footer).
 
-### C. New service: Website maintenance
-7. **Add a "Website maintenance" card** to the homepage **"Our Services in Sabah"** section
-   (currently only "Web Design" + "SEO Optimisation" — see §1). Use a fitting Webflow icon.
-8. Add **Website maintenance** as a card on `/services` (see B6). Decide with owner whether it also
-   needs a dedicated `/website-maintenance-sabah` page (the other services have one). If yes, add to
-   `build-pages.mjs` **and** every page-list array (see §4 gotchas) + sitemap + footer.
+### D. /blog
+9-11. Back to **3 columns** (`sw-grid cols-3`), card image height 190px, subtitle shortened to
+   **"Read our blogs!"**.
 
-### D. `/blog` page
-9. **Revert to 3 columns** (`sw-grid cols-3`) — the page is wider now (`.sw-wrap` = 80rem), so 3
-   image cards fit. (Currently `cols-2` at 240px image height; from `build-pages.mjs` blog block +
-   `blog/index.html`.)
-10. **Background overlaps the cards/words here too** — same fix as A2.
-11. **Reword the subtitle under the "Blog" H1.** Currently a long sentence; owner wants something
-    short like **"Read our blogs!"**. (In `build-pages.mjs` blog block + `blog/index.html`.)
+### E. Redundancy sweep
+12. Removed hidden "More resources" blocks (10 posts); stripped the dead pricing-tier arrays from
+   the 4 `pricingHtml()` calls in `build-pages.mjs` (the fn ignores its args). Link + asset scan
+   across all 20 pages: **0 broken, 0 root-absolute leaks**. Also verified: 0 em dashes, 0 schema
+   `offers` on service pages, 0 U+FFFD replacement chars.
 
-### E. Final sweep
-12. **Rescan the whole site for code redundancy + bugs and fix.** Dead CSS, duplicate/contradictory
-    Webflow rules, leftover `data-w-id` interaction attributes with no JS, dead pricing arrays in
-    `build-pages.mjs`, broken/again-absolute links, unused assets, etc.
+**Build scripts kept in sync:** `assets/site/custom.css`, `_build/build-services-hub.mjs`,
+`_build/build-pages.mjs`, `_build/seo-fix.mjs`. The standing caveat in §4 still holds — the
+deployed built files remain the source of truth; prefer targeted edits over a blind full rebuild.
+
+### Open / next (owner's call)
+- Optional dedicated **/website-maintenance-sabah** page (see B/C above).
+- Everything in §6 (human-only) is unchanged: DNS to apex, Formspree form ID, GBP, etc.
 
 ---
 
@@ -94,8 +84,8 @@ Pages (extensionless URLs, served by GitHub Pages):
 homepage grid, services hub, cross-links, sitemap, and schema.
 
 Homepage:
-- **"Our Services in Sabah"** now shows only **2 cards** — Web Design + SEO Optimisation — with a
-  **"Read more"** button below → `/services`. *(Owner wants a 3rd card "Website maintenance" — §A/C.)*
+- **"Our Services in Sabah"** now shows **3 cards** — Web Design + SEO Optimisation + **Website
+  Maintenance** — with a **"Read more"** button below → `/services`.
 - **"Explore Our Blog"** section (was "Explore Our Resources"): the 4 Webflow tabs were stripped to
   one, trimmed to the **3 latest posts**, with a **"See all blog posts"** button → `/blog`.
 - Contact block ("Have an idea in mind?") now has the **black email button** + a **green "WhatsApp
@@ -104,11 +94,10 @@ Homepage:
 Nav (every page): **Projects · Services (→/services) · Blog (→/blog) · FAQ · Get in touch**.
 A Services dropdown was prototyped then removed at the owner's request — plain link is intentional.
 
-`/blog` index: H1 **"Blog"** + subtitle, **2-col** image cards (one hero image per post).
-*(Owner wants 3-col + shorter subtitle — §D.)*
+`/blog` index: H1 **"Blog"** + **"Read our blogs!"** subtitle, **3-col** image cards (190px hero each).
 
-`/services` hub: hero (no buttons) · service cards (Web design / SEO / Webflow, each "Learn more"
-→ its page) · "Why SabahWebs" · "How we price" · FAQ · bottom CTA. *(Owner wants heavy trim — §B.)*
+`/services` hub: hero (no eyebrow) · **3 service cards** (Web design / SEO services / Website
+maintenance) · bottom CTA. No eyebrows, no "Why SabahWebs", no "How we price", no FAQ.
 
 ---
 
@@ -240,6 +229,9 @@ llms.txt. **Audit source:** `Z:\sites\SEO dashboard\reports\sabahwebs-seo-audit-
 
 ## 8. This session's commits (newest first)
 
+- `d510142` FAQ accordion fix (self-contained toggle) + bg z-index overlap fix; Website
+  Maintenance card on home + /services; /services trimmed to 3 cards (no eyebrows/FAQ/Why/Pricing);
+  /blog 3-col + "Read our blogs!"; removed hidden "More resources" blocks; dead pricing arrays cut
 - `a33f7f3` Homepage/blog/nav refinements (2-card home services + Read more; Resources→Blog;
   "Explore Our Blog"; blog hero slimmed to "Blog"; `.sw-wrap` 80rem; green WhatsApp on homepage)
 - `4b8f83c` Fix click-blocking blob overlay (`pointer-events:none`); enlarge blog index cards
