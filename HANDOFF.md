@@ -1,165 +1,147 @@
-# HANDOFF — sabahwebs.com (Webflow → GitHub Pages migration + SEO)
+# HANDOFF — sabahwebs.com (Webflow clone + SEO, hosted on GitHub Pages)
 
 **Last updated:** 2026-06-09
 **Subject site:** sabahwebs.com — web design + SEO agency, Sabah Malaysia (+ Australia secondary)
 **Owners:** Bing & Liang (two partners) · WhatsApp/phone **+60 16-843 0891** · happycodesmy@gmail.com
 **Repo:** https://github.com/fyb27/sabahwebs.com (public, branch `main`)
-**Live now:** https://fyb27.github.io/sabahwebs.com/  *(direct, no redirect)*
-**Future home:** https://sabahwebs.com *(after DNS switch — still on Webflow/Cloudflare today)*
+**Live (GitHub clone):** https://fyb27.github.io/sabahwebs.com/  ← serves directly, no redirect
+**Real site (unchanged):** https://sabahwebs.com is still on **Webflow** (Cloudflare DNS). Never touched.
 **Local working copy:** `Z:\sites\sabahwebs happycodes\sabahwebs`
+
+---
+
+## 0. Mental model (important)
+
+There are **two separate, independent sites**:
+
+| | Real site | GitHub clone |
+|---|---|---|
+| URL | `sabahwebs.com` | `fyb27.github.io/sabahwebs.com/` |
+| Host | Webflow / Cloudflare | GitHub Pages |
+| Status | live, untouched | live, this repo |
+
+The clone does **not** point at or affect `sabahwebs.com` (Pages custom domain is removed,
+`cname` is null). They only connect if the owners later repoint DNS to GitHub (their call).
 
 ---
 
 ## 1. What was done
 
-Migrated sabahwebs.com **off Webflow hosting** into a self-contained static site, pushed to
-GitHub, deployed on GitHub Pages, and implemented the fixes from the
-`sabahwebs-seo-audit-2026-06-08` report (in `Z:\sites\SEO dashboard\reports\`).
+Cloned sabahwebs.com **off Webflow** into a self-contained static site, applied the
+2026-06-08 SEO audit fixes, then iterated on design/content per owner feedback.
 
-- **Cloned** all 11 original pages (homepage + 10 blog posts) and **129 assets** (CSS, JS,
-  jQuery, webflow.js, fonts, images, favicons). All references rewritten to local paths —
-  **zero Webflow CDN dependency**. Original URLs preserved (extensionless, e.g. `/blog/ai-seo-malaysia`).
-- **Built 9 new pages** (full SEO copy): 5 service/location pages + About + Contact + blog
-  index + branded 404.
-- **Applied the SEO audit fixes** (see §5).
-- **Pushed + deployed:** repo `fyb27/sabahwebs.com`, GitHub Pages serving from `main` root.
-  Custom domain was removed (per owner request) so the github.io URL serves directly with
-  no redirect; asset/link paths are relative so the site works at both the github.io
-  subpath and the apex domain.
+- **Cloned** 11 original pages (home + 10 blog posts) + all assets locally. Zero Webflow CDN
+  dependency. Original extensionless URLs preserved.
+- **New pages built:** `/services` (hub), `/web-design-sabah`, `/seo-services-sabah`,
+  `/web-design-kota-kinabalu`, `/ecommerce-website-sabah`, `/webflow-website-sabah`,
+  `/about`, `/contact`, `/blog` (index, fixes the old 404), `404.html`.
+- **Deployed** on GitHub Pages, served at the github.io project URL with **relative asset
+  paths** (so it works both at that subpath and, later, at the apex domain).
 
 ---
 
-## 2. Current state
+## 2. Serving model (read before touching paths)
 
-| Thing | Status |
-|---|---|
-| Clone off Webflow | ✅ Done — fully self-hosted |
-| Pushed to GitHub | ✅ `fyb27/sabahwebs.com`, `main`, 154 files |
-| GitHub Pages | ✅ Live & verified (homepage, CSS, service pages, blog posts all HTTP 200) |
-| SEO audit code fixes | ✅ Done (§5) |
-| DNS to apex domain | ⏳ Owners will do later |
-| Contact form backend | ⏳ Formspree placeholder, needs real ID |
+- The site uses **relative** asset/link paths (`assets/...`, `../assets/...`). This is what
+  lets it render at `fyb27.github.io/sabahwebs.com/`. **Do not** revert to root-absolute
+  `/assets` paths or the subpath build breaks.
+- `relativize.mjs` (pipeline step 7) does this conversion. Every new HTML file MUST be listed
+  in its `rootPages`/blog arrays or it ships unstyled (this bit us once with `services.html`).
+- Canonical / og / hreflang / JSON-LD URLs stay **absolute** (`https://sabahwebs.com/...`) on
+  purpose, so the apex remains the SEO canonical and the github.io copy isn't indexed.
+- The custom domain was **removed** from Pages so github.io serves directly (no redirect).
+  Bare `…/sabahwebs.com` → 301 → `…/sabahwebs.com/` is just GitHub adding a trailing slash
+  (normal for any project page), not a jump to Webflow.
+
+### To move the clone onto sabahwebs.com later
+1. Repo → Settings → Pages → Custom domain → `sabahwebs.com` (recreates CNAME).
+2. DNS: `A @ → 185.199.108–111.153`; `CNAME www → fyb27.github.io`; remove Webflow records.
+3. Enable Enforce HTTPS once the cert provisions. Relative paths already work at the apex.
 
 ---
 
-## 3. Repo structure
+## 3. Theme + design notes
+
+- The site is a **LIGHT theme**: page background `#fafafa`, body text `#393e46`. NB the
+  Webflow class `background_dark` is misleadingly named — it resolves to the off-white
+  `--base-color-brand--background`. Style new components dark-on-light, not light-on-dark.
+- Brand: primary `#f25836` (orange), teal `#00adb5`, ink `#222831`, cream `#f3dfa2`.
+- All custom styling for the new pages + enriched footer lives in `assets/site/custom.css`
+  (the `.sw-*` classes). Webflow's own CSS still powers the homepage/blog + navbar/footer shell.
+- **No em dashes** anywhere on the site (owner preference) — enforced by `cleanup.mjs`.
+- **No prices** on service pages (every project differs) — pricing sections are a no-number
+  "How we price / get a quote" block; the schema `offers` are stripped. The two blog articles
+  that discuss Malaysian SEO/website pricing keep their figures (editorial, intentional).
+- Discoverability: service pages are reachable from the homepage via (a) the body
+  "Our services" cards, (b) top-nav "Services" → `/services` hub, (c) footer links.
+- Web Design Sabah + Kota Kinabalu are presented as **one** card/footer entry (de-duped); the
+  KK page still exists (good for local SEO) and is linked from the hub's web-design card.
+
+---
+
+## 4. Build pipeline (re-runnable; scripts in `_build/`, gitignored)
+
+Run from repo root, in this order. A fresh `mirror` is required first — `seo-fix` is NOT
+idempotent (re-running twice double-injects).
 
 ```
-index.html                       homepage
-404.html                         branded 404 (GitHub Pages custom 404)
-about.html  contact.html         new pages
-web-design-sabah.html            new service page
-seo-services-sabah.html          new service page
-web-design-kota-kinabalu.html    new location page
-ecommerce-website-sabah.html     new service page
-webflow-website-sabah.html       new service page
-blog/index.html                  NEW blog index (was a 404)
-blog/<slug>.html                 10 original posts (fixed)
-assets/**                        all localized CSS/JS/fonts/images
-assets/site/custom.css           styles for new pages + enriched footer
-sitemap.xml robots.txt llms.txt  SEO/root files
-.nojekyll                        serve files as-is (no Jekyll)
-README.md HANDOFF.md
-_build/                          build tooling (gitignored, NOT deployed)
+node _build/mirror.mjs           # download 11 pages + assets from live Webflow
+node _build/seo-fix.mjs          # sitewide SEO + migration fixes to the 11 pages
+                                 #   (schema, hreflang, canonical, og, fonts, footer,
+                                 #    nav Services->/services, bylines, home "Our services")
+node _build/extract-chrome.mjs   # snapshot navbar/footer/scripts -> _build/chrome.json
+node _build/build-pages.mjs      # build the 9 new pages (no prices)
+node _build/build-services-hub.mjs  # build /services hub (clones web-design-sabah.html)
+node _build/blog-cta.mjs         # inject contextual blog->service CTAs
+node _build/relativize.mjs       # root-absolute -> relative paths (MUST list every page)
+node _build/cleanup.mjs          # strip schema offers + remove em dashes site-wide
+node _build/validate.mjs         # check (run BEFORE relativize for meaningful output)
 ```
 
----
-
-## 4. Build pipeline (how to regenerate)
-
-All tooling is in `_build/` (Node ESM, run from repo root). Re-runnable in order:
-
-```
-node _build/mirror.mjs          # re-download 11 pages + assets from live Webflow
-node _build/seo-fix.mjs         # apply sitewide SEO/migration fixes to the 11 pages
-node _build/extract-chrome.mjs  # snapshot navbar/footer/scripts into _build/chrome.json
-node _build/build-pages.mjs     # build the 9 new pages
-node _build/blog-cta.mjs        # inject contextual blog→service CTAs
-node _build/relativize.mjs      # convert /asset paths to relative (subpath + apex safe)
-node _build/validate.mjs        # check all local assets + internal links resolve
-```
-
-> ⚠️ The pipeline rewrites the 11 source HTML files in place and is **not** idempotent
-> (re-running `seo-fix` twice double-injects). Always start from a fresh `mirror`.
-> Key constants (owners, phone, email) live at the top of `seo-fix.mjs` and `build-pages.mjs`.
+Notes:
+- Owner/contact constants live at the top of `seo-fix.mjs`, `build-pages.mjs`,
+  `build-services-hub.mjs`. Change them in all three.
+- `build-pages.mjs` still contains pricing tier arrays — they're **dead data** the redefined
+  `pricingHtml()` ignores. Safe to ignore or delete.
+- `tweaks.mjs` is **deprecated** (its nav + byline fixes were folded into `seo-fix.mjs`).
+- `validate.mjs` only checks root-absolute refs, so it reports 0/0 after `relativize`. To
+  validate links, run it between `blog-cta` and `relativize`.
 
 ---
 
-## 5. SEO fixes applied (from the 2026-06-08 audit)
+## 5. SEO fixes applied (from the audit)
 
-- ✅ **Schema/JSON-LD** on every page: `ProfessionalService`+`LocalBusiness` org,
-  `WebSite`, `FAQPage` (5 Q&A from homepage), `BlogPosting` (2 authors + dates + hero image),
-  `BreadcrumbList`, `Service`, `AboutPage`, `ContactPage`, `Blog`.
-- ✅ **5 service/location pages + About + Contact** (the audit's #1 growth blocker).
-- ✅ **Blog index** created → fixes the `/blog` 404.
-- ✅ `lang="en-MY"` + **hreflang** (`en-my` / `en-au` / `x-default`).
-- ✅ **Canonical** tags fixed to absolute URLs.
-- ✅ **og:image / og:url / og:site_name / og:locale / twitter:image** on every page (none existed).
-- ✅ **Lorem ipsum** testimonials → neutral placeholder.
-- ✅ **Pseudonym bylines** ("Curious/Honest/Happy Explorer") → real authors (Bing & Liang).
-- ✅ **Performance:** removed render-blocking WebFont.js (18 weights) → direct Lato `<link>`
-  (4 weights, `display=swap`); removed sitewide reCAPTCHA; removed dead Webflow GA-proxy script.
-- ✅ **Enriched footer** with real NAP (phone, WhatsApp, email, service areas) sitewide.
-- ✅ `robots.txt` duplicate `Sitemap:` removed; `sitemap.xml` rebuilt with all 19 URLs + `lastmod`.
-- ✅ `llms.txt` added (AI search / GEO).
-- ✅ Webflow form submit hijack neutralized; forms rewired to a Formspree endpoint placeholder.
+Schema/JSON-LD on every page (Organization/LocalBusiness, WebSite, FAQPage, BlogPosting w/ two
+authors, BreadcrumbList, Service, AboutPage, ContactPage, Blog, CollectionPage) · 5 service +
+hub + about + contact + blog index · hreflang (en-my/en-au/x-default) + `lang=en-MY` · absolute
+canonicals · og:image everywhere · Lorem ipsum removed · pseudonym bylines → Bing & Liang ·
+WebFont.js + sitewide reCAPTCHA + dead Webflow GA-proxy removed, direct Lato `<link>` · enriched
+NAP footer · robots.txt deduped, sitemap.xml + lastmod, llms.txt.
 
 ---
 
-## 6. Next actions (human-only — can't be done in code)
+## 6. Next actions (human-only)
 
-- [ ] **Switch DNS to the apex** (see §7) — the only thing between this and `sabahwebs.com`.
-- [ ] **Activate the contact form:** create a free [Formspree](https://formspree.io) form and
-      replace `REPLACE_FORM_ID` in `contact.html` **and** `index.html`. (WhatsApp/phone/email
-      already work everywhere.)
-- [ ] **Confirm pricing numbers** in the 5 service pages — they're realistic Malaysian
-      starting points, not your confirmed rates. Edit the `pricingHtml(...)` blocks (or the
-      built HTML directly).
-- [ ] **Google Business Profile** — create & verify as a Service-Area Business (primary
-      category "Web Designer"; areas KK / Sandakan / Tawau / Sabah). Highest local-ranking action.
-- [ ] **`hello@sabahwebs.com`** — set up the mailbox, then swap it in if you want it as the
-      public email (currently using the working `happycodesmy@gmail.com`).
-- [ ] **Real testimonials** — replace the neutral placeholder once you collect client quotes.
-- [ ] **Security headers + HSTS** — GitHub Pages can't set custom headers. If you front the
-      site with Cloudflare again, add them there (audit flagged this as HIGH).
-- [ ] *(From audit Phase 3, longer-term)* move client content (Orou Sapulot ×4, scaffolding,
-      clinic) to `/projects/[client]` case studies; build local citations (Clutch/GoodFirms);
-      request Google reviews from the 4 named clients.
+- [ ] **DNS to apex** (§2) — only thing between the clone and `sabahwebs.com`. Owners' call.
+- [ ] **Contact form** — forms POST to `https://formspree.io/f/REPLACE_FORM_ID`. Create a free
+      Formspree form and swap the ID in `contact.html` + `index.html`. (WhatsApp/phone/email work now.)
+- [ ] **`hello@sabahwebs.com`** mailbox (optional; currently using the working Gmail).
+- [ ] **Google Business Profile** — create + verify (Service-Area Business, KK/Sandakan/Tawau/Sabah).
+- [ ] **Security headers + HSTS** — not possible on GitHub Pages; add via Cloudflare if re-fronted.
+- [ ] **Real testimonials** — replace the neutral placeholder once collected.
+- [ ] **Confirm copy** — service-page wording, hub copy, and the homepage "Our services" blurb.
 
 ---
 
-## 7. Going live on sabahwebs.com (DNS)
+## 7. Environment / gotchas
 
-1. In the repo: **Settings → Pages → Custom domain →** enter `sabahwebs.com` and Save
-   (this recreates the `CNAME`). The relative paths already work at the apex, so nothing
-   else changes.
-2. At your DNS host (currently Cloudflare):
-   - `A  @ → 185.199.108.153 / 185.199.109.153 / 185.199.110.153 / 185.199.111.153`
-   - `CNAME  www → fyb27.github.io`
-   - Remove the old Webflow DNS records.
-   - If using Cloudflare proxy (orange cloud), set SSL/TLS mode to **Full**.
-3. Once DNS resolves, tick **Enforce HTTPS** in Pages settings (cert auto-provisions).
-
-> The canonical/og/hreflang/JSON-LD URLs already point to `https://sabahwebs.com`, so search
-> engines treat the apex as the canonical home and won't index the github.io URL.
-
----
-
-## 8. Environment notes / gotchas
-
-- **GitHub auth:** no `gh` CLI and no `GITHUB_TOKEN` env on this machine, but Git Credential
-  Manager holds a valid token for account **`fyb27`** — `git push` over HTTPS just works, and
-  the REST API token can be pulled via `git credential-manager get` (used to create the repo
-  + enable Pages). `git config --global user.name/email` are empty; set per-repo.
-- **Relative paths:** `relativize.mjs` is what lets the site work at `github.io/sabahwebs.com/`.
-  If you ever re-run the build and forget it, the site breaks at the subpath (root-absolute
-  `/assets` → 404). It's safe at the apex too, so just always run it last.
-- **Webflow forms** POST to Webflow's servers via `webflow.js`; off-platform they don't submit.
-  We removed the `w-form` wrapper class so `webflow.js` stops hijacking them and pointed them
-  at Formspree. `webflow.js` is still loaded for the mobile nav toggle + FAQ accordion.
-- **Fonts:** now a direct Google Fonts `<link>` (Lato 400/700/900 + 400 italic). Self-hosting
-  the woff2 files would remove the last third-party connection if you want max performance.
-- **Tracking kept:** Google Analytics (G-BK1FVF46K5) + Ahrefs analytics are still wired on all
-  pages, including the new ones.
-- **PDF/audit source:** the original audit + this project's first handoff live in
-  `Z:\sites\SEO dashboard\reports\` (`sabahwebs-seo-audit-2026-06-08.{html,pdf}`, `HANDOFF.md`).
+- **GitHub auth:** no `gh` CLI / no `GITHUB_TOKEN`, but Git Credential Manager holds a valid
+  token for account **`fyb27`** — `git push` over HTTPS just works; pull the token via
+  `git credential-manager get` for REST API calls (repo create, Pages enable/disable, cname clear).
+  `git config --global user.name/email` are empty; set per-repo.
+- **Webflow forms** are neutralised (the `w-form` class is stripped so webflow.js stops
+  hijacking) and pointed at Formspree. `webflow.js` is still loaded for the mobile nav + FAQ accordion.
+- **Fonts:** direct Google Fonts `<link>` (Lato 400/700/900 + 400 italic). Self-host the woff2
+  for max performance if desired.
+- **Tracking kept:** Google Analytics (G-BK1FVF46K5) + Ahrefs analytics on all pages.
+- **Audit source:** `Z:\sites\SEO dashboard\reports\sabahwebs-seo-audit-2026-06-08.{html,pdf}`.
