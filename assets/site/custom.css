@@ -40,6 +40,24 @@
 /* Decorative fixed blob layer (position:fixed; inset:0) must not capture clicks,
    or it covers the generated <main> content and breaks links + the FAQ accordion. */
 .page_background{ pointer-events:none; }
+/* ...and must never PAINT over the content. The blob layer sits at z-index:0; every
+   real content child of .main-wrapper (navbar, sections, the generated <main>, footer)
+   is raised above it. Sections are already position:relative in Webflow, so this only
+   sets the stacking order and does not move anything. Fixes blobs overlapping headings,
+   cards and words on the home, services and blog pages. */
+.main-wrapper > section,
+.main-wrapper > main,
+.main-wrapper > .section_navbar,
+.main-wrapper > .section_footer{ position:relative; z-index:1; }
+
+/* Self-contained FAQ accordion (homepage) — does not depend on Webflow's IX2 engine,
+   which does not survive the static mirror. A small inline script on the homepage toggles
+   .sw-open on the row; these rules override the inline height:0/opacity:0 Webflow left on
+   the answer, and turn the "+" icon into a "–" by hiding the vertical bar. */
+.faq_answer{ transition:opacity .3s ease; }
+.faq_contents-wrapper.sw-open .faq_answer{ height:auto !important; opacity:1 !important; transform:none !important; }
+.faq_icon-vertical{ transition:transform .25s ease, opacity .25s ease; }
+.faq_contents-wrapper.sw-open .faq_icon-vertical{ transform:rotate(90deg); opacity:0; }
 .sw-grid{ display:grid; gap:1.4rem; }
 .sw-grid.cols-2{ grid-template-columns:repeat(2,1fr); }
 .sw-grid.cols-3{ grid-template-columns:repeat(3,1fr); }
