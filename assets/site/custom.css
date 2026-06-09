@@ -10,8 +10,12 @@
 /* Hide the Webflow attribution badge (no longer a Webflow-hosted site) */
 .w-webflow-badge{ display:none !important; }
 
+/* WhatsApp variant of the Webflow button (brand green; the default .button is black) */
+.button.is-wa{ background-color:#25d366; color:#fff; }
+.button.is-wa:hover{ background-color:#1ebe5b; }
+
 /* ---------- shared helpers for new pages ---------- */
-.sw-wrap{ max-width:1180px; margin:0 auto; padding:0 5%; }
+.sw-wrap{ max-width:80rem; margin:0 auto; padding:0 5%; }
 .sw-section{ padding:4.5rem 0; }
 .sw-section.is-tight{ padding:3rem 0; }
 .sw-eyebrow{ color:var(--sw-teal); font-weight:700; letter-spacing:.08em; text-transform:uppercase; font-size:.8rem; margin-bottom:.6rem; }
