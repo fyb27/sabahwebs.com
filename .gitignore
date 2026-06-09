@@ -1,0 +1,7 @@
+# Build tooling (mirror + SEO build scripts) — kept local, not served
+_build/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.log
